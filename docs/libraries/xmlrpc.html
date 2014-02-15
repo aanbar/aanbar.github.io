@@ -32,7 +32,7 @@
 	<body>
 		<div id="table-contents">
 			<div class="toctree-wrapper compound">
-			<function <lambda> at 0x3f4daa0>
+			<function <lambda> at 0x3a02320>
 			</div>
 		</div>
 
@@ -197,12 +197,12 @@ $this-&gt;xmlrpc-&gt;request($request);</pre>
 <p>If you use data types other than strings, or if you have several
 different data types, you will place each parameter into its own array,
 with the data type in the second position:</p>
-<div class="highlight-ci"><pre>$request = array (
-                   array('John', 'string'),
-                   array('Doe', 'string'),
-                   array(FALSE, 'boolean'),
-                   array(12345, 'int')
-                 );
+<div class="highlight-ci"><pre>$request = array(
+        array('John', 'string'),
+        array('Doe', 'string'),
+        array(FALSE, 'boolean'),
+        array(12345, 'int')
+);
 $this-&gt;xmlrpc-&gt;request($request);</pre>
 </div>
 <p>The <a class="reference external" href="#datatypes">Data Types</a> section below has a full list of data
@@ -239,7 +239,7 @@ not part of the CodeIgniter super object.</p>
 <p>In other words, if an XML-RPC Client sends a request for the new_post
 method, your server will load the My_blog class and call the new_entry
 function. If the request is for the update_post method, your server
-will load the My_blog class and call the update_entry function.</p>
+will load the My_blog class and call the <tt class="docutils literal"><span class="pre">update_entry()</span></tt> method.</p>
 <p>The function names in the above example are arbitrary. You&#8217;ll decide
 what they should be called on your server, or if you are using
 standardized APIs, like the Blogger or MetaWeblog API, you&#8217;ll use their
@@ -247,7 +247,7 @@ function names.</p>
 <p>There are two additional configuration keys you may make use of when
 initializing the server class: debug can be set to TRUE in order to
 enable debugging, and xss_clean may be set to FALSE to prevent sending
-data through the Security library&#8217;s xss_clean function.</p>
+data through the Security library&#8217;s <tt class="docutils literal"><span class="pre">xss_clean()</span></tt> method.</p>
 </div>
 <div class="section" id="processing-server-requests">
 <h3><a class="toc-backref" href="#id10">Processing Server Requests</a><a class="headerlink" href="#processing-server-requests" title="Permalink to this headline">¶</a></h3>
@@ -269,46 +269,49 @@ contains the data sent by the XML-RPC Client. Using this object you will
 have access to the <em>request parameters</em> enabling you to process the
 request. When you are done you will send a Response back to the Client.</p>
 <p>Below is a real-world example, using the Blogger API. One of the methods
-in the Blogger API is getUserInfo(). Using this method, an XML-RPC
+in the Blogger API is <tt class="docutils literal"><span class="pre">getUserInfo()</span></tt>. Using this method, an XML-RPC
 Client can send the Server a username and password, in return the Server
 sends back information about that particular user (nickname, user ID,
 email address, etc.). Here is how the processing function might look:</p>
 <div class="highlight-ci"><pre>class My_blog extends CI_Controller {
 
-    function getUserInfo($request)
-    {
-        $username = 'smitty';
-        $password = 'secretsmittypass';
-
-        $this-&gt;load-&gt;library('xmlrpc');
-
-        $parameters = $request-&gt;output_parameters();
-
-        if ($parameters['1'] != $username AND $parameters['2'] != $password)
+        public function getUserInfo($request)
         {
-            return $this-&gt;xmlrpc-&gt;send_error_message('100', 'Invalid Access');
+                $username = 'smitty';
+                $password = 'secretsmittypass';
+
+                $this-&gt;load-&gt;library('xmlrpc');
+
+                $parameters = $request-&gt;output_parameters();
+
+                if ($parameters[1] != $username &amp;&amp; $parameters[2] != $password)
+                {
+                        return $this-&gt;xmlrpc-&gt;send_error_message('100', 'Invalid Access');
+                }
+
+                $response = array(
+                        array(
+                                'nickname'  =&gt; array('Smitty', 'string'),
+                                'userid'    =&gt; array('99', 'string'),
+                                'url'       =&gt; array('http://yoursite.com', 'string'),
+                                'email'     =&gt; array('jsmith@yoursite.com', 'string'),
+                                'lastname'  =&gt; array('Smith', 'string'),
+                                'firstname' =&gt; array('John', 'string')
+                        ),
+                         'struct'
+                );
+
+                return $this-&gt;xmlrpc-&gt;send_response($response);
         }
-
-        $response = array(array('nickname'  =&gt; array('Smitty','string'),
-                                'userid'    =&gt; array('99','string'),
-                                'url'       =&gt; array('http://yoursite.com','string'),
-                                'email'     =&gt; array('jsmith@yoursite.com','string'),
-                                'lastname'  =&gt; array('Smith','string'),
-                                'firstname' =&gt; array('John','string')
-                                ),
-                         'struct');
-
-        return $this-&gt;xmlrpc-&gt;send_response($response);
-    }
 }</pre>
 </div>
 <div class="section" id="notes">
 <h4><a class="toc-backref" href="#id11">Notes:</a><a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h4>
-<p>The output_parameters() function retrieves an indexed array
+<p>The <tt class="docutils literal"><span class="pre">output_parameters()</span></tt> method retrieves an indexed array
 corresponding to the request parameters sent by the client. In the above
 example, the output parameters will be the username and password.</p>
 <p>If the username and password sent by the client were not valid, and
-error message is returned using send_error_message().</p>
+error message is returned using <tt class="docutils literal"><span class="pre">send_error_message()</span></tt>.</p>
 <p>If the operation was successful, the client will be sent back a response
 array containing the user&#8217;s info.</p>
 </div>
@@ -320,21 +323,21 @@ However, unlike requests, a response is an array <strong>that contains a
 single item</strong>. This item can be an array with several additional arrays,
 but there can be only one primary array index. In other words, the basic
 prototype is this:</p>
-<div class="highlight-ci"><pre>$response = array('Response data',  'array');</pre>
+<div class="highlight-ci"><pre>$response = array('Response data', 'array');</pre>
 </div>
 <p>Responses, however, usually contain multiple pieces of information. In
 order to accomplish this we must put the response into its own array so
 that the primary array continues to contain a single piece of data.
 Here&#8217;s an example showing how this might be accomplished:</p>
-<div class="highlight-ci"><pre>$response = array (
-                   array(
-                         'first_name' =&gt; array('John', 'string'),
-                         'last_name' =&gt; array('Doe', 'string'),
-                         'member_id' =&gt; array(123435, 'int'),
-                         'todo_list' =&gt; array(array('clean house', 'call mom', 'water plants'), 'array'),
-                        ),
-                 'struct'
-                 );</pre>
+<div class="highlight-ci"><pre>$response = array(
+        array(
+                'first_name' =&gt; array('John', 'string'),
+                'last_name' =&gt; array('Doe', 'string'),
+                'member_id' =&gt; array(123435, 'int'),
+                'todo_list' =&gt; array(array('clean house', 'call mom', 'water plants'), 'array'),
+        ),
+        'struct'
+);</pre>
 </div>
 <p>Notice that the above array is formatted as a struct. This is the most
 common data type for responses.</p>
@@ -423,17 +426,16 @@ class Xmlrpc_server extends CI_Controller {
                 $parameters = $request-&gt;output_parameters();
 
                 $response = array(
-                                        array(
-                                                'you_said'  =&gt; $parameters[0],
-                                                'i_respond' =&gt; 'Not bad at all.'
-                                        ),
-                                        'struct'
-                                );
+                        array(
+                                'you_said'  =&gt; $parameters[0],
+                                'i_respond' =&gt; 'Not bad at all.'
+                        ),
+                        'struct'
+                );
 
                 return $this-&gt;xmlrpc-&gt;send_response($response);
         }
-}
-?&gt;</pre>
+}</pre>
 </div>
 </div>
 <div class="section" id="try-it">
@@ -445,7 +447,7 @@ class Xmlrpc_server extends CI_Controller {
 back to you.</p>
 <p>The client you created sends a message (&#8220;How&#8217;s is going?&#8221;) to the
 server, along with a request for the &#8220;Greetings&#8221; method. The Server
-receives the request and maps it to the &#8220;process&#8221; function, where a
+receives the request and maps it to the <tt class="docutils literal"><span class="pre">process()</span></tt> method, where a
 response is sent back.</p>
 </div>
 </div>
@@ -454,22 +456,21 @@ response is sent back.</p>
 <p>If you wish to use an associative array in your method parameters you
 will need to use a struct datatype:</p>
 <div class="highlight-ci"><pre>$request = array(
-                 array(
-                       // Param 0
-                       array(
-                             'name'=&gt;'John'
-                                ),
-                             'struct'
-                       ),
-                       array(
-                             // Param 1
-                             array(
-                                        'size'=&gt;'large',
-                                   'shape'=&gt;'round'
-                                        ),
-                             'struct'
-                       )
-                 );
+        array(
+                // Param 0
+                array('name' =&gt; 'John'),
+                'struct'
+        ),
+        array(
+                // Param 1
+                array(
+                        'size' =&gt; 'large',
+                        'shape'=&gt;'round'
+                ),
+                'struct'
+        )
+);
+
 $this-&gt;xmlrpc-&gt;request($request);</pre>
 </div>
 <p>You can retrieve the associative array when processing the request in
@@ -693,7 +694,7 @@ First parameter is the error number while the second parameter is the error mess
 		
 		<div id="footer">
 			<p class="top"><a href="#header" title="Return to top">Return to top</a></p>
-			<p><a href="http://codeigniter.com/">CodeIgniter</a> &ndash; Copyright &copy; 2013, EllisLab, Inc.</a></p>
+			<p><a href="http://codeigniter.com/">CodeIgniter</a> &ndash; Copyright &copy; 2014, EllisLab, Inc.</a></p>
 		</div><!-- /#footer -->
 	</body>
 </html>
